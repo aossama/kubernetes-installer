@@ -1,0 +1,60 @@
+// ID identifying the cluster to create
+cluster_id = "example-cluster"
+
+// Domain of the cluster. This should be "${cluster_id}.${base_domain}".
+cluster_domain = "example-cluster.devcluster.example.com"
+
+// Base domain from which the cluster domain is a subdomain.
+base_domain = "devcluster.example.com"
+
+// Name of the vSphere VCSA server.
+vsphere_server = "vcsa.vmware.devcluster.example.com"
+
+// User on the vSphere server.
+vsphere_user = "YOUR_USER"
+
+// Password of the user on the vSphere server.
+vsphere_password = "YOUR_PASSWORD"
+
+// Name of the VM template to clone to create VMs for the cluster.
+vm_template = "talos-latest"
+
+// Kubernetes version to run
+kubernetes_version = "1.27.1"
+
+// Talos version to run
+talos_version = "v1.4.6"
+
+// The number of control plane VMs to create. Default is 3.
+control_plane_count = 3
+
+// The number of compute VMs to create. Default is 3.
+compute_count = 3
+
+// Set control_plane_ip, and compute_ip
+
+// The IP addresses to assign to the control plane VMs. The length of this list
+// must match the value of control_plane_count.
+//control_plane_ips = ["10.0.0.20", "10.0.0.21", "10.0.0.22"]
+
+// The IP addresses to assign to the compute VMs. The length of this list must
+// match the value of compute_count.
+//compute_ips = ["10.0.0.30", "10.0.0.31", "10.0.0.32"]
+
+// A list of maps where each map defines a specific failure domain.  At least 1 failure domain must be
+// specified.  When multiple failure domains are specified, control plane and compute nodes are distributed
+// among the defined failure domains.
+failure_domains = [
+    {
+        // Name of the vSphere data center.
+        datacenter = "dc1"
+        // Name of the vSphere cluster.
+        cluster = "devel"
+        // Name of the vSphere data store to use for the VMs.
+        datastore = "nvme-ds1"
+        // Name of the vSphere network to use for the VMs.
+        network = "ci-segment-151"
+        // UUID of the distrubted switch which is hosting the portgroup.  This can derived from the MOB.
+        distributed_virtual_switch_uuid = "50 05 1b 07 19 2b 0b 0a-eb 90 98 54 1d c5 b5 19"
+    }
+]
