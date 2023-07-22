@@ -97,11 +97,6 @@ variable "control_plane_ip_addresses" {
   type    = list(string)
   default = []
   description = "The IP addresses to assign to the control plane VMs"
-
-  validation {
-    condition     = length(var.control_plane_ip_addresses) == var.control_plane_count
-    error_message = "The length of this list must match the value of control_plane_count."
-  }
 }
 
 variable "control_plane_memory" {
@@ -129,11 +124,6 @@ variable "compute_count" {
 variable "compute_ip_addresses" {
   type    = list(string)
   default = []
-
-  validation {
-    condition     = length(var.compute_ip_addresses) == var.compute_count
-    error_message = "The length of this list must match the value of compute_count."
-  }
 }
 
 variable "compute_memory" {
