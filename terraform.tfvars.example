@@ -35,11 +35,11 @@ compute_count = 3
 
 // The IP addresses to assign to the control plane VMs. The length of this list
 // must match the value of control_plane_count.
-//control_plane_ips = ["10.0.0.20", "10.0.0.21", "10.0.0.22"]
+//control_plane_ip_addresses = ["10.0.0.20", "10.0.0.21", "10.0.0.22"]
 
 // The IP addresses to assign to the compute VMs. The length of this list must
 // match the value of compute_count.
-//compute_ips = ["10.0.0.30", "10.0.0.31", "10.0.0.32"]
+//compute_ip_addresses = ["10.0.0.30", "10.0.0.31", "10.0.0.32"]
 
 // A list of maps where each map defines a specific failure domain.  At least 1 failure domain must be
 // specified.  When multiple failure domains are specified, control plane and compute nodes are distributed

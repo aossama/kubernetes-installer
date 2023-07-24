@@ -8,8 +8,8 @@ locals {
   }] : var.failure_domains
 
   failure_domain_count  = length(local.failure_domains)
-  cluster_domain        = formatlist("%s.%s", var.cluster_id, var.base_domain)
-  api_lb_fqdns          = formatlist("%s.%s", "api", var.cluster_domain)
+  cluster_domain        = format("%s.%s", var.cluster_id, var.base_domain)
+  api_lb_fqdns          = format("%s.%s", "api", var.cluster_domain)
   control_plane_fqdns   = [for idx in range(var.control_plane_count) : "control-plane-${idx}.${var.cluster_domain}"]
   compute_fqdns         = [for idx in range(var.compute_count) : "compute-${idx}.${var.cluster_domain}"]
   datastores            = [for idx in range(length(local.failure_domains)) : local.failure_domains[idx]["datastore"]]
