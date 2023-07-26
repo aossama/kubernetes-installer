@@ -47,11 +47,8 @@ resource "vsphere_virtual_machine" "vm" {
     thin_provisioned = var.disk_thin_provisioned
   }
 
-  ovf_deploy {
-    allow_unverified_ssl_cert = false
-    remote_ovf_url            = data.vsphere_ovf_vm_template.ovfRemote.remote_ovf_url
-    disk_provisioning         = data.vsphere_ovf_vm_template.ovfRemote.disk_provisioning
-    ovf_network_map           = data.vsphere_ovf_vm_template.ovfRemote.ovf_network_map
+  clone {
+    template_uuid = var.template_uuid
   }
 
   extra_config = {

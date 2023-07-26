@@ -64,19 +64,10 @@ resource "vsphere_folder" "folder" {
   datacenter_id = data.vsphere_datacenter.dc[index(data.vsphere_datacenter.dc.*.name, local.datacenters_distinct[count.index])].id
 }
 
-## Remote OVF/OVA Source
-data "vsphere_ovf_vm_template" "ovfRemote" {
+data "vsphere_virtual_machine" "template" {
   count = length(local.datacenters_distinct)
-  name              = "${var.cluster_id}-talos-template"
-  folder            = vsphere_folder.folder[index(data.vsphere_datacenter.dc.*.name, local.failure_domains[count.index % local.failure_domain_count]["datacenter"])].path
-  disk_provisioning = "thin"
-  resource_pool_id  = vsphere_resource_pool.resource_pool[count.index % local.failure_domain_count].id
-  datastore_id      = data.vsphere_datastore.datastore[count.index % local.failure_domain_count].id
-  host_system_id    = data.vsphere_host.host.id
-  remote_ovf_url    = "https://github.com/siderolabs/talos/releases/download/${var.talos_version}/vmware-amd64.ova"
-  ovf_network_map = {
-    "VM Network" : data.vsphere_network.network[count.index % local.failure_domain_count].id
-  }
+  name          = var.vm_template
+  datacenter_id = data.vsphere_datacenter.dc[index(data.vsphere_datacenter.dc.*.name, local.datacenters_distinct[count.index])].id
 }
 
 resource "talos_machine_secrets" "cp" {}
@@ -99,10 +90,9 @@ module "control_plane_vm" {
   datacenter_id         = data.vsphere_datacenter.dc[index(data.vsphere_datacenter.dc.*.name, local.failure_domains[count.index % local.failure_domain_count]["datacenter"])].id
   network_id            = data.vsphere_network.network[count.index % local.failure_domain_count].id
   folder_id             = vsphere_folder.folder[index(data.vsphere_datacenter.dc.*.name, local.failure_domains[count.index % local.failure_domain_count]["datacenter"])].path
-  ovfRemote             = data.vsphere_ovf_vm_template.ovfRemote[index(data.vsphere_datacenter.dc.*.name, local.failure_domains[count.index % local.failure_domain_count]["datacenter"])]
-  guest_id              = data.vsphere_ovf_vm_template.ovfRemote[index(data.vsphere_datacenter.dc.*.name, local.failure_domains[count.index % local.failure_domain_count]["datacenter"])].guest_id
-  template_uuid         = data.vsphere_ovf_vm_template.ovfRemote[index(data.vsphere_datacenter.dc.*.name, local.failure_domains[count.index % local.failure_domain_count ]["datacenter"])].id
-  disk_thin_provisioned = data.vsphere_ovf_vm_template.ovfRemote[index(data.vsphere_datacenter.dc.*.name, local.failure_domains[count.index % local.failure_domain_count]["datacenter"])].disks[0].thin_provisioned
+  guest_id              = data.vsphere_virtual_machine.template[index(data.vsphere_datacenter.dc.*.name, local.failure_domains[count.index % local.failure_domain_count]["datacenter"])].guest_id
+  template_uuid         = data.vsphere_virtual_machine.template[index(data.vsphere_datacenter.dc.*.name, local.failure_domains[count.index % local.failure_domain_count ]["datacenter"])].id
+  disk_thin_provisioned = data.vsphere_virtual_machine.template[index(data.vsphere_datacenter.dc.*.name, local.failure_domains[count.index % local.failure_domain_count]["datacenter"])].disks[0].thin_provisioned
   cluster_domain        = var.cluster_domain
   machine_cidr          = var.machine_cidr
   num_cpus              = var.control_plane_num_cpus
