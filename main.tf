@@ -64,10 +64,19 @@ resource "vsphere_folder" "folder" {
   datacenter_id = data.vsphere_datacenter.dc[index(data.vsphere_datacenter.dc.*.name, local.datacenters_distinct[count.index])].id
 }
 
-data "vsphere_virtual_machine" "template" {
+resource "vsphere_content_library" "talos_content_library" {
   count = length(local.datacenters_distinct)
-  name          = var.vm_template
-  datacenter_id = data.vsphere_datacenter.dc[index(data.vsphere_datacenter.dc.*.name, local.datacenters_distinct[count.index])].id
+  name            = "Talos Content Library"
+  description     = "Content library for hosting Talos templates"
+  storage_backing = [data.vsphere_datastore.datastore[count.index % local.failure_domain_count].id]
+}
+
+resource "vsphere_content_library_item" "talos_template" {
+  count = length(local.datacenters_distinct)
+  name        = "talos-${var.talos_version}-template"
+  description = "Talos version ${var.talos_version} template"
+  file_url    = "https://github.com/siderolabs/talos/releases/download/${var.talos_version}/vmware-amd64.ova"
+  library_id  = vsphere_content_library.talos_content_library[count.index % local.failure_domain_count].id
 }
 
 resource "talos_machine_secrets" "cp" {}
@@ -90,9 +99,9 @@ module "control_plane_vm" {
   datacenter_id         = data.vsphere_datacenter.dc[index(data.vsphere_datacenter.dc.*.name, local.failure_domains[count.index % local.failure_domain_count]["datacenter"])].id
   network_id            = data.vsphere_network.network[count.index % local.failure_domain_count].id
   folder_id             = vsphere_folder.folder[index(data.vsphere_datacenter.dc.*.name, local.failure_domains[count.index % local.failure_domain_count]["datacenter"])].path
-  guest_id              = data.vsphere_virtual_machine.template[index(data.vsphere_datacenter.dc.*.name, local.failure_domains[count.index % local.failure_domain_count]["datacenter"])].guest_id
-  template_uuid         = data.vsphere_virtual_machine.template[index(data.vsphere_datacenter.dc.*.name, local.failure_domains[count.index % local.failure_domain_count ]["datacenter"])].id
-  disk_thin_provisioned = data.vsphere_virtual_machine.template[index(data.vsphere_datacenter.dc.*.name, local.failure_domains[count.index % local.failure_domain_count]["datacenter"])].disks[0].thin_provisioned
+  template_uuid         = vsphere_content_library_item.talos_template[index(data.vsphere_datacenter.dc.*.name, local.failure_domains[count.index % local.failure_domain_count ]["datacenter"])].id
+  guest_id              = "otherLinux64Guest"
+  disk_thin_provisioned = "true"
   cluster_domain        = var.cluster_domain
   machine_cidr          = var.machine_cidr
   num_cpus              = var.control_plane_num_cpus
