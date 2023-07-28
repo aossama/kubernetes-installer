@@ -4,21 +4,10 @@ data "talos_machine_configuration" "this" {
   cluster_endpoint = var.cluster_endpoint
   machine_secrets  = var.vm_machine_secret
   config_patches = [
-    yamlencode({
-      machine = {
-        network = {
-          hostname = var.vmname
-          interfaces = [
-            {
-              interface= "eth0"
-              addresses = [
-                var.ipaddress
-              ]
-            }
-          ]
-        }
-      }
-    })
+    templatefile("${path.module}/templates/network-snippet.yaml.tmpl", {
+      hostname     = var.vmname
+      ipaddress    = var.ipaddress
+    }),
   ]
 }
 

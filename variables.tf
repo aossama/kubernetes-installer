@@ -64,7 +64,7 @@ variable "talos_version" {
   description = "Desired Talos version to generate config for"
 }
 
-variable "cluster_id" {
+variable "cluster_name" {
   type        = string
   description = "This cluster id must be of max length 27 and must have only alphanumeric or hyphen characters"
 }
@@ -81,6 +81,7 @@ variable "cluster_domain" {
 
 variable "machine_cidr" {
   type = string
+  default = ""
 }
 
 ///////////

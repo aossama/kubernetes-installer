@@ -1,5 +1,5 @@
 // ID identifying the cluster to create
-cluster_id = "example-cluster"
+cluster_name = "example-cluster"
 
 // Domain of the cluster. This should be "${cluster_id}.${base_domain}".
 cluster_domain = "example-cluster.devcluster.example.com"
