@@ -3,30 +3,15 @@ data "talos_machine_configuration" "this" {
   machine_type     = var.machine_type
   cluster_endpoint = var.cluster_endpoint
   machine_secrets  = var.vm_machine_secret
-  config_patches = [
-    templatefile("${path.module}/templates/machine-install.yaml.tmpl", {}),
-    templatefile("${path.module}/templates/machine-sans.yaml.tmpl", {
-      cluster_domain     = var.cluster_domain
-    }),
+  config_patches   = concat([
     templatefile("${path.module}/templates/network-snippet.yaml.tmpl", {
       hostname     = var.vmname
       ipaddress    = var.ipaddress
       gateway      = var.gateway
-    }),
-    templatefile("${path.module}/templates/machine-nameservers.yaml.tmpl", {
-      nameservers = var.nameservers
-    }),
-    templatefile("${path.module}/templates/machine-timeservers.yaml.tmpl", {
-      ntpservers = var.ntpservers
-    }),
-    templatefile("${path.module}/templates/registry-mirrors.yaml.tmpl", {
-      registries_mirrors = var.registries_mirrors
-    }),
-    templatefile("${path.module}/templates/machine-files.yaml.tmpl", {
-      additional_ca = var.additional_ca
-    }),
-    file("${path.module}/files/cluster-discovery.yaml"),
-  ]
+    },
+    )],
+    var.config_patches
+  )
 }
 
 resource "vsphere_virtual_machine" "vm" {

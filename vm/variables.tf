@@ -95,3 +95,5 @@ variable "additional_ca" {
 }
 
 variable "vm_machine_secret" {}
+
+variable "config_patches" {}

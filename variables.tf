@@ -47,11 +47,6 @@ variable "gateway" {
   default     = ""
 }
 
-variable "vm_template" {
-  type        = string
-  description = "This is the name of the VM template to clone"
-}
-
 variable "nameservers" {
   type    = list(string)
   default = ["8.8.8.8", "1.1.1.1"]
@@ -82,11 +77,6 @@ variable "cluster_name" {
 }
 
 variable "base_domain" {
-  type        = string
-  description = "The base DNS zone to add the sub zone to"
-}
-
-variable "cluster_domain" {
   type        = string
   description = "The base DNS zone to add the sub zone to"
 }

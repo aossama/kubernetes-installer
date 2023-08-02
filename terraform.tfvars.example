@@ -1,9 +1,6 @@
 // ID identifying the cluster to create
 cluster_name = "example-cluster"
 
-// Domain of the cluster. This should be "${cluster_id}.${base_domain}".
-cluster_domain = "example-cluster.devcluster.example.com"
-
 // Base domain from which the cluster domain is a subdomain.
 base_domain = "devcluster.example.com"
 
@@ -43,7 +40,20 @@ registries_mirrors = {
 }
 
 // Add custom certificate authorities
-
+additional_ca = [
+<<EOT
+-----BEGIN CERTIFICATE-----
+MIIEPzCCAyegAwIBAgIBCzANBgkqhkiG9w0BAQsFADB0MRgwFgYDVQQDEw9BT3Nz
+-----END CERTIFICATE-----
+EOT
+,
+<<EOT
+-----BEGIN CERTIFICATE-----
+MIIEQjCCAyqgAwIBAgIBADANBgkqhkiG9w0BAQsFADB0MRgwFgYDVQQDEw9BT3Nz
+-----END CERTIFICATE-----
+EOT
+,
+]
 
 // Set control_plane_ip, and compute_ip
 

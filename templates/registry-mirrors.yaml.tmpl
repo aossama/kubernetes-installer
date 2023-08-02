@@ -1,3 +1,4 @@
+%{~ if length(registries_mirrors) > 0 ~}
 machine:
   registries:
     mirrors:
@@ -8,3 +9,4 @@ machine:
         - ${endpoint}
         %{~ endfor ~}
       %{~ endfor ~}
+%{~ endif ~}

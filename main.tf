@@ -7,11 +7,31 @@ locals {
     distributed_virtual_switch_uuid = ""
   }] : var.failure_domains
 
+  common_config_patches = [
+    templatefile("${path.module}/templates/machine-install.yaml.tmpl", {}),
+    templatefile("${path.module}/templates/machine-sans.yaml.tmpl", {
+      cluster_domain     = local.cluster_domain
+    }),
+    templatefile("${path.module}/templates/machine-nameservers.yaml.tmpl", {
+      nameservers = var.nameservers
+    }),
+    templatefile("${path.module}/templates/machine-timeservers.yaml.tmpl", {
+      ntpservers = var.ntpservers
+    }),
+    templatefile("${path.module}/templates/registry-mirrors.yaml.tmpl", {
+      registries_mirrors = var.registries_mirrors
+    }),
+    templatefile("${path.module}/templates/machine-files.yaml.tmpl", {
+      additional_ca = var.additional_ca
+    }),
+    file("${path.module}/files/cluster-discovery.yaml"),
+  ]
+
   failure_domain_count  = length(local.failure_domains)
   cluster_domain        = format("%s.%s", var.cluster_name, var.base_domain)
-  cluster_endpoint      = format("%s.%s", "api", var.cluster_domain)
-  control_plane_fqdns   = [for idx in range(length(var.control_plane_ip_addresses)) : "control-plane-${idx}.${var.cluster_domain}"]
-  compute_fqdns         = [for idx in range(length(var.compute_ip_addresses)) : "compute-${idx}.${var.cluster_domain}"]
+  cluster_endpoint      = format("%s.%s", "api", local.cluster_domain)
+  control_plane_fqdns   = [for idx in range(length(var.control_plane_ip_addresses)) : "control-plane-${idx}.${local.cluster_domain}"]
+  compute_fqdns         = [for idx in range(length(var.compute_ip_addresses)) : "compute-${idx}.${local.cluster_domain}"]
   datastores            = [for idx in range(length(local.failure_domains)) : local.failure_domains[idx]["datastore"]]
   datacenters           = [for idx in range(length(local.failure_domains)) : local.failure_domains[idx]["datacenter"]]
   datacenters_distinct  = distinct([for idx in range(length(local.failure_domains)) : local.failure_domains[idx]["datacenter"]])
@@ -72,7 +92,7 @@ resource "vsphere_content_library" "talos_content_library" {
 }
 
 resource "vsphere_content_library_item" "talos_template" {
-  count = length(local.datacenters_distinct)
+  count       = length(local.datacenters_distinct)
   name        = "talos-${var.talos_version}-template"
   description = "Talos version ${var.talos_version} template"
   file_url    = "https://github.com/siderolabs/talos/releases/download/${var.talos_version}/vmware-amd64.ova"
@@ -105,7 +125,7 @@ module "control_plane_vm" {
   template_uuid         = vsphere_content_library_item.talos_template[index(data.vsphere_datacenter.dc.*.name, local.failure_domains[count.index % local.failure_domain_count ]["datacenter"])].id
   guest_id              = "otherLinux64Guest"
   disk_thin_provisioned = "true"
-  cluster_domain        = var.cluster_domain
+  cluster_domain        = local.cluster_domain
   machine_cidr          = var.machine_cidr
   gateway               = var.gateway
   num_cpus              = var.control_plane_num_cpus
@@ -119,6 +139,8 @@ module "control_plane_vm" {
   machine_type          = data.talos_machine_configuration.controlplane.machine_type
   cluster_name          = data.talos_machine_configuration.controlplane.cluster_name
   cluster_endpoint      = data.talos_machine_configuration.controlplane.cluster_endpoint
+
+  config_patches        = concat(local.common_config_patches, data.talos_machine_configuration.controlplane.config_patches)
 }
 
 data "talos_client_configuration" "this" {
