@@ -49,7 +49,11 @@ variable "num_cpus" {
   type = string
 }
 
-variable "dns_addresses" {
+variable "nameservers" {
+  type = list(string)
+}
+
+variable "ntpservers" {
   type = list(string)
 }
 
@@ -58,6 +62,10 @@ variable "vmname" {
 }
 
 variable "ipaddress" {
+  type = string
+}
+
+variable "gateway" {
   type = string
 }
 
@@ -74,6 +82,16 @@ variable "machine_type" {
 
 variable "cluster_endpoint" {
   type = string
+}
+
+variable "registries_mirrors" {
+  type = map(object({
+    endpoints = list(string)
+  }))
+}
+
+variable "additional_ca" {
+  type = list(string)
 }
 
 variable "vm_machine_secret" {}

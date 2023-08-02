@@ -1,0 +1,11 @@
+machine:
+  files:
+    %{~ if length(additional_ca) > 0 ~}
+    %{~ for ca in additional_ca ~}
+    - content: |
+        ${ca}
+      permissions: 0644
+      path: /etc/ssl/certs/ca-certificates
+      op: append
+    %{~ endfor ~}
+    %{~ endif ~}

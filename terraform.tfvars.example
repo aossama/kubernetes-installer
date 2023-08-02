@@ -19,17 +19,31 @@ vsphere_password = "YOUR_PASSWORD"
 // Name of the VM template to clone to create VMs for the cluster.
 vm_template = "talos-latest"
 
+// The default gateway for the network
+//gateway = "10.0.0.1"
+
 // Kubernetes version to run
-kubernetes_version = "1.27.1"
+kubernetes_version = "1.27.3"
 
 // Talos version to run
-talos_version = "v1.4.6"
+talos_version = "v1.4.7"
 
 // The number of control plane VMs to create. Default is 3.
 control_plane_count = 3
 
 // The number of compute VMs to create. Default is 3.
 compute_count = 3
+
+// Specifies mirror configuration for each registry host namespace
+registries_mirrors = {
+    "docker.io" = { endpoints: [""] },
+    "gcr.io" = { endpoints: [""] },
+    "ghcr.io" = { endpoints: [""] },
+    "registry.k8s.io" = { endpoints: [""] },
+}
+
+// Add custom certificate authorities
+
 
 // Set control_plane_ip, and compute_ip
 

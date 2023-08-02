@@ -1,0 +1,6 @@
+machine:
+  network:
+    nameservers:
+      %{~ for nameserver in nameservers ~}
+      - ${nameserver}
+      %{~ endfor ~}

@@ -5,3 +5,6 @@ machine:
     - interface: eth0
       addresses:
       - ${ipaddress}/24
+      routes:
+      - network: 0.0.0.0/0
+        gateway: ${gateway}

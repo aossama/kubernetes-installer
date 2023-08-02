@@ -1,0 +1,10 @@
+machine:
+  registries:
+    mirrors:
+      %{~ for registry, endpoints in registries_mirrors ~}
+      ${registry}:
+        endpoints:
+        %{~ for endpoint in endpoints.endpoints ~}
+        - ${endpoint}
+        %{~ endfor ~}
+      %{~ endfor ~}

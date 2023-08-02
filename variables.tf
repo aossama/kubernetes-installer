@@ -34,10 +34,17 @@ variable "vsphere_datastore" {
   default     = ""
   description = "This is the name of the vSphere data store."
 }
+
 variable "vm_network" {
   type        = string
   description = "This is the name of the publicly accessible network for cluster ingress and access."
   default     = "VM Network"
+}
+
+variable "gateway" {
+  type        = string
+  description = "Network gateway"
+  default     = ""
 }
 
 variable "vm_template" {
@@ -45,9 +52,14 @@ variable "vm_template" {
   description = "This is the name of the VM template to clone"
 }
 
-variable "vm_dns_addresses" {
+variable "nameservers" {
   type    = list(string)
-  default = ["1.1.1.1", "9.9.9.9"]
+  default = ["8.8.8.8", "1.1.1.1"]
+}
+
+variable "ntpservers" {
+  type    = list(string)
+  default = ["0.pool.ntp.org", "time.google.com"]
 }
 
 /////////
@@ -82,6 +94,20 @@ variable "cluster_domain" {
 variable "machine_cidr" {
   type = string
   default = ""
+}
+
+variable "registries_mirrors" {
+  description = "A map of local mirrored registries"
+  type = map(object({
+    endpoints = list(string)
+  }))
+  default = {}
+}
+
+variable "additional_ca" {
+  description = "Additional CAs to be installed on nodes"
+  type = list(string)
+  default = []
 }
 
 ///////////

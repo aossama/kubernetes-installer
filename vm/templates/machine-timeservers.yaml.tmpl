@@ -1,0 +1,6 @@
+machine:
+  time:
+    servers:
+      %{~ for ntpserver in ntpservers ~}
+      - ${ntpserver}
+      %{~ endfor ~}
