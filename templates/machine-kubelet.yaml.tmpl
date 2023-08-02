@@ -1,0 +1,9 @@
+%{~ if length(machine_cidrs) > 0 ~}
+machine:
+  kubelet:
+    nodeIP:
+      validSubnets:
+      %{~ for machine_cidr in machine_cidrs ~}
+      - ${machine_cidr}
+      %{~ endfor ~}
+%{~ endif ~}

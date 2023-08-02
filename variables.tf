@@ -81,9 +81,9 @@ variable "base_domain" {
   description = "The base DNS zone to add the sub zone to"
 }
 
-variable "machine_cidr" {
-  type = string
-  default = ""
+variable "machine_cidrs" {
+  type = list(string)
+  default = []
 }
 
 variable "registries_mirrors" {

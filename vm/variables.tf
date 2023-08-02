@@ -37,10 +37,6 @@ variable "datacenter_id" {
   type = string
 }
 
-variable "machine_cidr" {
-  type = string
-}
-
 variable "memory" {
   type = string
 }

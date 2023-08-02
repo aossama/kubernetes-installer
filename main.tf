@@ -9,6 +9,9 @@ locals {
 
   common_config_patches = [
     templatefile("${path.module}/templates/machine-install.yaml.tmpl", {}),
+    templatefile("${path.module}/templates/machine-kubelet.yaml.tmpl", {
+      machine_cidrs     = var.machine_cidrs
+    }),
     templatefile("${path.module}/templates/machine-sans.yaml.tmpl", {
       cluster_domain     = local.cluster_domain
     }),
@@ -126,7 +129,6 @@ module "control_plane_vm" {
   guest_id              = "otherLinux64Guest"
   disk_thin_provisioned = "true"
   cluster_domain        = local.cluster_domain
-  machine_cidr          = var.machine_cidr
   gateway               = var.gateway
   num_cpus              = var.control_plane_num_cpus
   memory                = var.control_plane_memory
