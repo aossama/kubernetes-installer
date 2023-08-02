@@ -27,6 +27,12 @@ locals {
     templatefile("${path.module}/templates/machine-files.yaml.tmpl", {
       additional_ca = var.additional_ca
     }),
+    templatefile("${path.module}/templates/cluster-network.yaml.tmpl", {
+      cluster_network = var.cluster_network
+    }),
+    templatefile("${path.module}/templates/cluster-kube-proxy.yaml.tmpl", {
+      cluster_kube_proxy = var.cluster_kube_proxy
+    }),
     file("${path.module}/files/cluster-discovery.yaml"),
   ]
 

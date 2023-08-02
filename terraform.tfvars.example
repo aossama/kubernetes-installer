@@ -19,6 +19,9 @@ vm_template = "talos-latest"
 // The default gateway for the network
 //gateway = "10.0.0.1"
 
+// Machine CIDRs configures the networks to pick kubelet node IP from
+machine_cidrs = ["10.0.0.0/24"]
+
 // Kubernetes version to run
 kubernetes_version = "1.27.3"
 
@@ -38,6 +41,15 @@ registries_mirrors = {
     "ghcr.io" = { endpoints: [""] },
     "registry.k8s.io" = { endpoints: [""] },
 }
+
+cluster_network = {
+  name = "none"
+  dnsDomain = "cluster.local"
+  pod_subnets = ["10.128.0.0/14"]
+  service_subnets = ["172.16.0.0/16"]
+}
+
+cluster_kube_proxy = true
 
 // Add custom certificate authorities
 additional_ca = [

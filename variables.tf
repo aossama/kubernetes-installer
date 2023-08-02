@@ -100,6 +100,34 @@ variable "additional_ca" {
   default = []
 }
 
+variable "cluster_kube_proxy" {
+  description = "Kube-proxy server-specific configuration options"
+  type = bool
+  default = true
+}
+
+variable "cluster_network" {
+  description = "Provides cluster specific network configuration options"
+  type = object({
+    name = string
+    dnsDomain = string
+    pod_subnets = list(string)
+    service_subnets = list(string)
+  })
+
+  default = {
+    name = "flannel"
+    dnsDomain = "cluster.local"
+    pod_subnets = ["10.244.0.0/14"]
+    service_subnets = ["10.96.0.0/16"]
+  }
+
+  validation {
+    condition     = length(regexall("^(flannel|none)$", var.cluster_network["name"])) > 0
+    error_message = "ERROR: Valid types are \"flannel\" and \"none\"!"
+  }
+}
+
 ///////////
 // control-plane machine variables
 ///////////

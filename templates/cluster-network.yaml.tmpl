@@ -1,0 +1,19 @@
+%{~ if length(cluster_network) > 0 ~}
+cluster:
+  network:
+    cni:
+      name: ${cluster_network["name"]}
+    dnsDomain: ${cluster_network["dnsDomain"]}
+    %{~ if length(cluster_network["pod_subnets"]) > 0 ~}
+    podSubnets:
+    %{~ for pod_subnet in cluster_network["pod_subnets"] ~}
+    - ${pod_subnet}
+    %{~ endfor ~}
+    %{~ endif ~}
+    %{~ if length(cluster_network["service_subnets"]) > 0 ~}
+    serviceSubnets:
+    %{~ for service_subnet in cluster_network["service_subnets"] ~}
+    - ${service_subnet}
+    %{~ endfor ~}
+    %{~ endif ~}
+%{~ endif ~}

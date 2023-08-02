@@ -1,0 +1,5 @@
+%{~ if !cluster_kube_proxy  ~}
+cluster:
+  proxy:
+    disabled: true
+%{~ endif ~}
