@@ -222,3 +222,18 @@ data "talos_cluster_kubeconfig" "kubeconfig" {
   client_configuration = talos_machine_secrets.this.client_configuration
   node = [for k, v in var.control_plane_ip_addresses : v][0]
 }
+
+module "deploy_cilium" {
+  depends_on = [
+    talos_machine_bootstrap.bootstrap
+  ]
+
+  count = var.cluster_network.name == "none" ? 1 : 0
+  source = "./cilium"
+
+  chart_version = "1.13.2"
+  cluster_host = local.cluster_endpoint
+  cluster_port = "6443"
+  kubeconfig = data.talos_cluster_kubeconfig.kubeconfig.kubeconfig_raw
+  pod_networks = var.cluster_network.pod_subnets[0]
+}

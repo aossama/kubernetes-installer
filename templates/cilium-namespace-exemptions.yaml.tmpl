@@ -1,0 +1,10 @@
+%{~ if can(cluster_network) && cluster_network["name"] == "none" ~}
+cluster:
+  apiServer:
+    admissionControl:
+      - name: PodSecurity
+        configuration:
+          exemptions:
+            namespaces:
+              - cilium
+%{~ endif ~}
