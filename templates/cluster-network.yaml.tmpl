@@ -1,4 +1,4 @@
-%{~ if length(cluster_network) > 0 ~}
+%{~ if can(cluster_network) ~}
 cluster:
   network:
     cni:

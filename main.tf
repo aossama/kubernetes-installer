@@ -117,6 +117,9 @@ data "talos_machine_configuration" "controlplane" {
   machine_secrets  = talos_machine_secrets.this.machine_secrets
   config_patches   = [
     file("${path.module}/files/cp-scheduling.yaml"),
+    templatefile("${path.module}/templates/cilium-namespace-exemptions.yaml.tmpl", {
+      cluster_network = var.cluster_network
+    })
   ]
 }
 
@@ -166,4 +169,56 @@ resource "talos_machine_bootstrap" "bootstrap" {
   client_configuration = talos_machine_secrets.this.client_configuration
   node                 = [for k, v in var.control_plane_ip_addresses : v][0]
   endpoint = local.cluster_endpoint
+}
+
+data "talos_machine_configuration" "worker" {
+  cluster_name     = var.cluster_name
+  machine_type     = "worker"
+  cluster_endpoint = "https://${local.cluster_endpoint}:6443"
+  machine_secrets  = talos_machine_secrets.this.machine_secrets
+  config_patches   = []
+}
+
+module "worker_vm" {
+  depends_on = [
+    talos_machine_bootstrap.bootstrap
+  ]
+
+  count = length(var.compute_ip_addresses)
+  source = "./vm"
+
+  vmname                = format("%s-worker-%02s", var.cluster_name, count.index + 1)
+  ipaddress             = var.compute_ip_addresses[count.index]
+  resource_pool_id      = vsphere_resource_pool.resource_pool[count.index % local.failure_domain_count].id
+  datastore_id          = data.vsphere_datastore.datastore[count.index % local.failure_domain_count].id
+  datacenter_id         = data.vsphere_datacenter.dc[index(data.vsphere_datacenter.dc.*.name, local.failure_domains[count.index % local.failure_domain_count]["datacenter"])].id
+  network_id            = data.vsphere_network.network[count.index % local.failure_domain_count].id
+  folder_id             = vsphere_folder.folder[index(data.vsphere_datacenter.dc.*.name, local.failure_domains[count.index % local.failure_domain_count]["datacenter"])].path
+  template_uuid         = vsphere_content_library_item.talos_template[index(data.vsphere_datacenter.dc.*.name, local.failure_domains[count.index % local.failure_domain_count ]["datacenter"])].id
+  guest_id              = "otherLinux64Guest"
+  disk_thin_provisioned = "true"
+  cluster_domain        = local.cluster_domain
+  gateway               = var.gateway
+  num_cpus              = var.compute_num_cpus
+  memory                = var.compute_memory
+  nameservers           = var.nameservers
+  ntpservers            = var.ntpservers
+  registries_mirrors    = var.registries_mirrors
+  additional_ca         = var.additional_ca
+
+  vm_machine_secret     = talos_machine_secrets.this.machine_secrets
+  machine_type          = data.talos_machine_configuration.worker.machine_type
+  cluster_name          = data.talos_machine_configuration.worker.cluster_name
+  cluster_endpoint      = data.talos_machine_configuration.worker.cluster_endpoint
+
+  config_patches        = concat(local.common_config_patches, data.talos_machine_configuration.worker.config_patches)
+}
+
+data "talos_cluster_kubeconfig" "kubeconfig" {
+  depends_on = [
+    talos_machine_bootstrap.bootstrap
+  ]
+
+  client_configuration = talos_machine_secrets.this.client_configuration
+  node = [for k, v in var.control_plane_ip_addresses : v][0]
 }
