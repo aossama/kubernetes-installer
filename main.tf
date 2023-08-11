@@ -10,10 +10,10 @@ locals {
   common_config_patches = [
     templatefile("${path.module}/templates/machine-install.yaml.tmpl", {}),
     templatefile("${path.module}/templates/machine-kubelet.yaml.tmpl", {
-      machine_cidrs     = var.machine_cidrs
+      machine_cidrs = var.machine_cidrs
     }),
     templatefile("${path.module}/templates/machine-sans.yaml.tmpl", {
-      cluster_domain     = local.cluster_domain
+      cluster_domain = local.cluster_domain
     }),
     templatefile("${path.module}/templates/machine-nameservers.yaml.tmpl", {
       nameservers = var.nameservers
@@ -84,6 +84,7 @@ resource "vsphere_resource_pool" "resource_pool" {
   count                   = length(data.vsphere_compute_cluster.compute_cluster)
   name                    = var.cluster_name
   parent_resource_pool_id = data.vsphere_compute_cluster.compute_cluster[count.index].resource_pool_id
+  tags                    = [vsphere_tag.tag[count.index % local.failure_domain_count].id]
 }
 
 resource "vsphere_folder" "folder" {
@@ -91,6 +92,31 @@ resource "vsphere_folder" "folder" {
   path          = var.cluster_name
   type          = "vm"
   datacenter_id = data.vsphere_datacenter.dc[index(data.vsphere_datacenter.dc.*.name, local.datacenters_distinct[count.index])].id
+  tags          = [vsphere_tag.tag[count.index % local.failure_domain_count].id]
+}
+
+resource "vsphere_tag_category" "category" {
+  count = length(local.datacenters_distinct)
+
+  name        = format("k8s-%s", var.cluster_name)
+  description = "Added by kubernetes installer, do not remove!"
+  cardinality = "SINGLE"
+
+  associable_types = [
+    "VirtualMachine",
+    "ResourcePool",
+    "Folder",
+    "Datastore",
+    "StoragePod"
+  ]
+}
+
+resource "vsphere_tag" "tag" {
+  count = length(local.datacenters_distinct)
+
+  name        = var.cluster_name
+  category_id = vsphere_tag_category.category[count.index].id
+  description = "Added by kubernetes installer, do not remove!"
 }
 
 resource "vsphere_content_library" "talos_content_library" {
@@ -117,14 +143,11 @@ data "talos_machine_configuration" "controlplane" {
   machine_secrets  = talos_machine_secrets.this.machine_secrets
   config_patches   = [
     file("${path.module}/files/cp-scheduling.yaml"),
-    templatefile("${path.module}/templates/cilium-namespace-exemptions.yaml.tmpl", {
-      cluster_network = var.cluster_network
-    })
   ]
 }
 
 module "control_plane_vm" {
-  count = length(var.control_plane_ip_addresses)
+  count = length(var.control_plane_ip_addresses) == 0 ? var.control_plane_count : length(var.control_plane_ip_addresses)
   source = "./vm"
 
   vmname                = format("%s-cp-%02s", var.cluster_name, count.index + 1)
@@ -137,6 +160,7 @@ module "control_plane_vm" {
   template_uuid         = vsphere_content_library_item.talos_template[index(data.vsphere_datacenter.dc.*.name, local.failure_domains[count.index % local.failure_domain_count ]["datacenter"])].id
   guest_id              = "otherLinux64Guest"
   disk_thin_provisioned = "true"
+  tags                  = [vsphere_tag.tag[count.index % local.failure_domain_count].id]
   cluster_domain        = local.cluster_domain
   gateway               = var.gateway
   num_cpus              = var.control_plane_num_cpus
@@ -184,7 +208,7 @@ module "worker_vm" {
     talos_machine_bootstrap.bootstrap
   ]
 
-  count = length(var.compute_ip_addresses)
+  count = length(var.compute_ip_addresses) == 0 ? var.compute_count : length(var.compute_ip_addresses)
   source = "./vm"
 
   vmname                = format("%s-worker-%02s", var.cluster_name, count.index + 1)
@@ -197,6 +221,7 @@ module "worker_vm" {
   template_uuid         = vsphere_content_library_item.talos_template[index(data.vsphere_datacenter.dc.*.name, local.failure_domains[count.index % local.failure_domain_count ]["datacenter"])].id
   guest_id              = "otherLinux64Guest"
   disk_thin_provisioned = "true"
+  tags                  = [vsphere_tag.tag[count.index % local.failure_domain_count].id]
   cluster_domain        = local.cluster_domain
   gateway               = var.gateway
   num_cpus              = var.compute_num_cpus

@@ -21,6 +21,10 @@ variable "folder_id" {
   type = string
 }
 
+variable "tags" {
+  type = list(any)
+}
+
 variable "datastore_id" {
   type = string
 }

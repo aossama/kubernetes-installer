@@ -133,15 +133,30 @@ variable "cluster_network" {
 ///////////
 
 variable "control_plane_count" {
-  type    = string
-  default = "3"
+  type    = number
+  default = 3
   description = "The number of control plane machines to provision"
+
+  validation {
+    condition     = var.control_plane_count == 1 || var.control_plane_count == 3
+    error_message = "ERROR: Only 1 or 3 control plane node count is allowed! Please specify either 1 or 3 control plane nodes."
+  }
 }
 
 variable "control_plane_ip_addresses" {
   type    = list(string)
   default = []
   description = "The IP addresses to assign to the control plane VMs"
+
+  validation {
+    condition = length(var.control_plane_ip_addresses) == 1 || length(var.control_plane_ip_addresses) == 3
+    error_message = "ERROR: Only 1 and 3 control plane node IPs are allowed! Please specify either 1 IP or 3 distinct IPs."
+  }
+
+  validation {
+    condition     = length(var.control_plane_ip_addresses) == length(distinct(var.control_plane_ip_addresses))
+    error_message = "ERROR: Control plane node IPs must be distinct."
+  }
 }
 
 variable "control_plane_memory" {
@@ -161,14 +176,29 @@ variable "control_plane_num_cpus" {
 //////////
 
 variable "compute_count" {
-  type    = string
-  default = "3"
+  type    = number
+  default = 2
   description = "The IP addresses to assign to the compute VMs"
+
+  validation {
+    condition     = var.compute_count >= 2
+    error_message = "ERROR: compute node count must be at least 2 nodes."
+  }
 }
 
 variable "compute_ip_addresses" {
   type    = list(string)
   default = []
+
+  validation {
+    condition = length(var.compute_ip_addresses) >= 2
+    error_message = "ERROR: Please specify at least 2 IPs for the compute nodes."
+  }
+
+  validation {
+    condition     = length(var.compute_ip_addresses) == length(distinct(var.compute_ip_addresses))
+    error_message = "ERROR: compute node IPs must be distinct."
+  }
 }
 
 variable "compute_memory" {

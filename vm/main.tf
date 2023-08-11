@@ -23,7 +23,9 @@ resource "vsphere_virtual_machine" "vm" {
   memory           = var.memory
   guest_id         = var.guest_id
   folder           = var.folder_id
+  tags             = var.tags
   enable_disk_uuid = "true"
+  firmware         = "efi"
 
   wait_for_guest_net_timeout  = 0
   wait_for_guest_ip_timeout   = 0
