@@ -3,6 +3,10 @@ data "talos_machine_configuration" "this" {
   machine_type     = var.machine_type
   cluster_endpoint = var.cluster_endpoint
   machine_secrets  = var.vm_machine_secret
+  docs = false
+  examples = false
+  kubernetes_version = var.kubernetes_version
+  talos_version = var.talos_version
   config_patches   = concat([
     templatefile("${path.module}/templates/network-snippet.yaml.tmpl", {
       hostname     = var.vmname

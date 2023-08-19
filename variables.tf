@@ -71,6 +71,12 @@ variable "talos_version" {
   description = "Desired Talos version to generate config for"
 }
 
+variable "ova_url" {
+  type = string
+  description = "URL Prefix for the OVA file"
+  default = "https://github.com/siderolabs/talos/releases/download"
+}
+
 variable "cluster_name" {
   type        = string
   description = "This cluster id must be of max length 27 and must have only alphanumeric or hyphen characters"
@@ -149,12 +155,12 @@ variable "control_plane_ip_addresses" {
   description = "The IP addresses to assign to the control plane VMs"
 
   validation {
-    condition = length(var.control_plane_ip_addresses) == 1 || length(var.control_plane_ip_addresses) == 3
+    condition = length(var.control_plane_ip_addresses) == 0 || (length(var.control_plane_ip_addresses) == 1 || length(var.control_plane_ip_addresses) == 3)
     error_message = "ERROR: Only 1 and 3 control plane node IPs are allowed! Please specify either 1 IP or 3 distinct IPs."
   }
 
   validation {
-    condition     = length(var.control_plane_ip_addresses) == length(distinct(var.control_plane_ip_addresses))
+    condition     = length(var.control_plane_ip_addresses) == 0 || length(var.control_plane_ip_addresses) == length(distinct(var.control_plane_ip_addresses))
     error_message = "ERROR: Control plane node IPs must be distinct."
   }
 }
@@ -191,12 +197,12 @@ variable "compute_ip_addresses" {
   default = []
 
   validation {
-    condition = length(var.compute_ip_addresses) >= 2
+    condition = length(var.compute_ip_addresses) == 0 || length(var.compute_ip_addresses) >= 2
     error_message = "ERROR: Please specify at least 2 IPs for the compute nodes."
   }
 
   validation {
-    condition     = length(var.compute_ip_addresses) == length(distinct(var.compute_ip_addresses))
+    condition     = length(var.compute_ip_addresses) == 0 || length(var.compute_ip_addresses) == length(distinct(var.compute_ip_addresses))
     error_message = "ERROR: compute node IPs must be distinct."
   }
 }

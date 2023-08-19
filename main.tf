@@ -130,7 +130,7 @@ resource "vsphere_content_library_item" "talos_template" {
   count       = length(local.datacenters_distinct)
   name        = "talos-${var.talos_version}-template"
   description = "Talos version ${var.talos_version} template"
-  file_url    = "https://github.com/siderolabs/talos/releases/download/${var.talos_version}/vmware-amd64.ova"
+  file_url    = format("%s/%s/vmware-amd64.ova", var.ova_url, var.talos_version)
   library_id  = vsphere_content_library.talos_content_library[count.index % local.failure_domain_count].id
 }
 
@@ -141,6 +141,10 @@ data "talos_machine_configuration" "controlplane" {
   machine_type     = "controlplane"
   cluster_endpoint = "https://${local.cluster_endpoint}:6443"
   machine_secrets  = talos_machine_secrets.this.machine_secrets
+  docs = false
+  examples = false
+  kubernetes_version = var.kubernetes_version
+  talos_version = var.talos_version
   config_patches   = [
     file("${path.module}/files/cp-scheduling.yaml"),
   ]
@@ -151,14 +155,14 @@ module "control_plane_vm" {
   source = "./vm"
 
   vmname                = format("%s-cp-%02s", var.cluster_name, count.index + 1)
-  ipaddress             = var.control_plane_ip_addresses[count.index]
+  ipaddress             = can(var.control_plane_ip_addresses[count.index]) ? var.control_plane_ip_addresses[count.index] : ""
   resource_pool_id      = vsphere_resource_pool.resource_pool[count.index % local.failure_domain_count].id
   datastore_id          = data.vsphere_datastore.datastore[count.index % local.failure_domain_count].id
   datacenter_id         = data.vsphere_datacenter.dc[index(data.vsphere_datacenter.dc.*.name, local.failure_domains[count.index % local.failure_domain_count]["datacenter"])].id
   network_id            = data.vsphere_network.network[count.index % local.failure_domain_count].id
   folder_id             = vsphere_folder.folder[index(data.vsphere_datacenter.dc.*.name, local.failure_domains[count.index % local.failure_domain_count]["datacenter"])].path
   template_uuid         = vsphere_content_library_item.talos_template[index(data.vsphere_datacenter.dc.*.name, local.failure_domains[count.index % local.failure_domain_count ]["datacenter"])].id
-  guest_id              = "otherLinux64Guest"
+  guest_id              = "other3xLinux64Guest"
   disk_thin_provisioned = "true"
   tags                  = [vsphere_tag.tag[count.index % local.failure_domain_count].id]
   cluster_domain        = local.cluster_domain
@@ -174,6 +178,8 @@ module "control_plane_vm" {
   machine_type          = data.talos_machine_configuration.controlplane.machine_type
   cluster_name          = data.talos_machine_configuration.controlplane.cluster_name
   cluster_endpoint      = data.talos_machine_configuration.controlplane.cluster_endpoint
+  kubernetes_version    = data.talos_machine_configuration.controlplane.kubernetes_version
+  talos_version         = data.talos_machine_configuration.controlplane.talos_version
 
   config_patches        = concat(local.common_config_patches, data.talos_machine_configuration.controlplane.config_patches)
 }
@@ -200,7 +206,13 @@ data "talos_machine_configuration" "worker" {
   machine_type     = "worker"
   cluster_endpoint = "https://${local.cluster_endpoint}:6443"
   machine_secrets  = talos_machine_secrets.this.machine_secrets
-  config_patches   = []
+  docs = false
+  examples = false
+  kubernetes_version = var.kubernetes_version
+  talos_version = var.talos_version
+  config_patches   = [
+    file("${path.module}/files/worker-node-labels.yaml"),
+  ]
 }
 
 module "worker_vm" {
@@ -212,14 +224,14 @@ module "worker_vm" {
   source = "./vm"
 
   vmname                = format("%s-worker-%02s", var.cluster_name, count.index + 1)
-  ipaddress             = var.compute_ip_addresses[count.index]
+  ipaddress             = can(var.compute_ip_addresses[count.index]) ? var.compute_ip_addresses[count.index] : ""
   resource_pool_id      = vsphere_resource_pool.resource_pool[count.index % local.failure_domain_count].id
   datastore_id          = data.vsphere_datastore.datastore[count.index % local.failure_domain_count].id
   datacenter_id         = data.vsphere_datacenter.dc[index(data.vsphere_datacenter.dc.*.name, local.failure_domains[count.index % local.failure_domain_count]["datacenter"])].id
   network_id            = data.vsphere_network.network[count.index % local.failure_domain_count].id
   folder_id             = vsphere_folder.folder[index(data.vsphere_datacenter.dc.*.name, local.failure_domains[count.index % local.failure_domain_count]["datacenter"])].path
   template_uuid         = vsphere_content_library_item.talos_template[index(data.vsphere_datacenter.dc.*.name, local.failure_domains[count.index % local.failure_domain_count ]["datacenter"])].id
-  guest_id              = "otherLinux64Guest"
+  guest_id              = "other3xLinux64Guest"
   disk_thin_provisioned = "true"
   tags                  = [vsphere_tag.tag[count.index % local.failure_domain_count].id]
   cluster_domain        = local.cluster_domain
@@ -235,6 +247,8 @@ module "worker_vm" {
   machine_type          = data.talos_machine_configuration.worker.machine_type
   cluster_name          = data.talos_machine_configuration.worker.cluster_name
   cluster_endpoint      = data.talos_machine_configuration.worker.cluster_endpoint
+  kubernetes_version    = data.talos_machine_configuration.worker.kubernetes_version
+  talos_version         = data.talos_machine_configuration.worker.talos_version
 
   config_patches        = concat(local.common_config_patches, data.talos_machine_configuration.worker.config_patches)
 }

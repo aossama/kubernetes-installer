@@ -3,8 +3,13 @@ machine:
     hostname: ${hostname}
     interfaces:
     - interface: eth0
+      %{~ if ipaddress != "" ~}
       addresses:
       - ${ipaddress}/24
       routes:
       - network: 0.0.0.0/0
         gateway: ${gateway}
+      dhcp: false
+      %{~ else ~}
+      dhcp: true
+      %{~ endif ~}
