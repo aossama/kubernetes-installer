@@ -2,6 +2,7 @@ cluster:
   discovery:
     enabled: true
     registries:
-      kubernetes: {}
+      kubernetes:
+        disabled: false
       service:
         disabled: true

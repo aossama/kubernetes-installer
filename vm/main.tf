@@ -53,4 +53,8 @@ resource "vsphere_virtual_machine" "vm" {
     "guestinfo.talos.config"                   = base64encode(data.talos_machine_configuration.this.machine_configuration)
     "stealclock.enable"                        = "TRUE"
   }
+
+  lifecycle {
+    ignore_changes = [disk, ]
+  }
 }
